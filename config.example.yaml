@@ -1,0 +1,22 @@
+# 本地clash端口
+clash_proxy: "http://127.0.0.1:7897"
+#  newsapi key
+newsapi_key: "xxxxxx"
+
+# 大模型key deepseek
+deepseek_api_key: "sk-xxxxxxxx"
+
+# 简报生成文件夹
+output_dir: "./reports"
+
+# 摘取newsapi新闻关键词
+keywords:
+  - "Federal Reserve"
+  - "interest rate"
+  - "US dollar"
+  - "tariff"
+  - "trade war"
+  - "geopolitical"
+  - "geopolitical"
+  - "Gold"
+  - "Gold price"
