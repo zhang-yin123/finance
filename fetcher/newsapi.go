@@ -24,16 +24,34 @@ type NewsResponse struct {
 }
 
 // 将关键词转为 NewsAPI 支持的 OR 查询
-func buildQuery(keywords []string) string {
-	quoted := make([]string, len(keywords))
-	for i, k := range keywords {
-		quoted[i] = `"` + strings.TrimSpace(k) + `"`
+func buildQuery(keywords, exclude []string) string {
+	var parts []string
+
+	for _, k := range keywords {
+		parts = append(parts, `"`+strings.TrimSpace(k)+`"`)
 	}
-	return "(" + strings.Join(quoted, " OR ") + ")"
+
+	q := "(" + strings.Join(parts, " OR ") + ")"
+
+	if len(exclude) > 0 {
+		var ex []string
+		for _, e := range exclude {
+			ex = append(ex, e)
+		}
+		q += " NOT (" + strings.Join(ex, " OR ") + ")"
+	}
+
+	return q
 }
 
 func FetchRelevantNews(client *http.Client, apiKey string, keywords []string) ([]Article, error) {
-	query := buildQuery(keywords)
+	exclude := []string{
+		"sport", "sports", "football", "soccer",
+		"nba", "olympic", "medal", "player",
+		"team", "match", "tournament",
+	}
+
+	query := buildQuery(keywords, exclude)
 	baseURL := "https://newsapi.org/v2/everything"
 	params := url.Values{}
 	params.Add("q", query)
