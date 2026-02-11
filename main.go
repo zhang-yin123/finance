@@ -30,7 +30,31 @@ func NewHTTPClient(proxyAddr string) *http.Client {
 	return client
 }
 
-func main() {
+func concurrencyReport() {
+	cfg := config.LoadConfig("config.yaml")
+	client := NewHTTPClient(cfg.ClashProxy)
+	// 1. 抓新闻
+	articles, err := fetcher.FetchRelevantNews(client, cfg.NewsAPIKey, cfg.Keywords)
+	if err != nil {
+		log.Fatal("抓取新闻失败:", err)
+	}
+	log.Printf("成功获取 %d 篇相关新闻", len(articles))
+
+	writer, err := output.NewStreamWriter(cfg.OutputDir)
+	if err != nil {
+		log.Fatal("初始化写入器失败:", err)
+	}
+	defer writer.Close()
+	s := summarizer.NewDeepSeek(cfg.DeepSeekAPIKey)
+	ch := make(chan summarizer.FinalArticle, len(articles))
+	s.SummarizeConcurrent(articles, ch)
+	for val := range ch {
+		writer.Write(val)
+	}
+	log.Println("✅ 日报生成完成")
+}
+
+func serialReport() {
 	cfg := config.LoadConfig("config.yaml")
 
 	client := NewHTTPClient(cfg.ClashProxy)
@@ -48,4 +72,8 @@ func main() {
 	output.SaveAsMarkdown(time.Now(), final, cfg.OutputDir)
 
 	log.Println("✅ 日报生成完成")
+}
+
+func main() {
+	concurrencyReport()
 }
